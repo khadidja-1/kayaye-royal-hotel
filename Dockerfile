@@ -1,14 +1,16 @@
-# Utiliser Java 17
+# Java 17
 FROM eclipse-temurin:17-jdk-alpine
 
-# Créer un dossier de travail
 WORKDIR /app
 
-# Copier tous les fichiers du projet
+# Copier le projet
 COPY . .
 
-# Compiler le projet (on saute les tests pour aller plus vite)
+# Autoriser l'exécution de Maven
+RUN chmod +x mvnw
+
+# Compiler le projet
 RUN ./mvnw clean package -DskipTests
 
-# Lancer l'application
+# Démarrer Spring Boot
 CMD ["java", "-jar", "target/hotel-0.0.1-SNAPSHOT.jar"]
