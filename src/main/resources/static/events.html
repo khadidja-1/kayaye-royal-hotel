@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kayaye Royal Hotel - Events</title>
+    <script src="translations.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; margin: 0; }
+        .container { max-width: 1000px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #1a252f; padding: 15px 20px; border-radius: 8px; flex-wrap: wrap; gap: 15px;}
+        .nav-links { display: flex; flex-wrap: wrap; gap: 12px; align-items: center;}
+        .nav-links a { text-decoration: none; color: white; font-weight: bold; font-size: 14px;}
+        .nav-links a.active { color: #d4af37; text-decoration: underline; }
+        .nav-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;}
+        .lang-selector { background: #d4af37; color: #1a252f; border: none; padding: 8px; border-radius: 5px; font-weight: bold; cursor: pointer;}
+        .btn-website { text-decoration: none; color: #2ecc71; font-weight: bold; font-size: 14px; white-space: nowrap;}
+        .btn-logout { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; white-space: nowrap;}
+
+        h2 { color: #333; }
+        .form-inline { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .form-inline input, .form-inline select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .form-inline button { padding: 10px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #1a252f; color: #d4af37; }
+        .badge-available { background: #e8f5e9; color: #2e7d32; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;}
+        .badge-booked { background: #ffebee; color: #c62828; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="nav">
+        <div class="nav-links">
+            <a href="dashboard.html" data-translate="nav_dash">Dashboard</a>
+            <a href="clients.html" data-translate="nav_clients">Clients</a>
+            <a href="rooms.html" data-translate="nav_rooms">Rooms</a>
+            <a href="reservations.html" data-translate="nav_bookings">Bookings</a>
+            <a href="employees.html" data-translate="nav_employees">Employees</a>
+            <a href="restaurant.html" data-translate="nav_rest">Restaurant</a>
+            <a href="housekeeping.html" data-translate="nav_house">Housekeeping</a>
+            <a href="inventory.html" data-translate="nav_inv">Inventory</a>
+            <a href="events.html" class="active" data-translate="nav_events">Events</a>
+        </div>
+        <div class="nav-actions">
+            <select class="lang-selector" onchange="applyTranslations(this.value)">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="ar"> العربية</option>
+            </select>
+            <a href="index.html" target="_blank" class="btn-website" data-translate="nav_website">🌐 View Website</a>
+            <button class="btn-logout" onclick="logout()" data-translate="btn_logout">Logout</button>
+        </div>
+    </div>
+
+    <h2 data-translate="event_title">Event & Meeting Rooms</h2>
+
+    <div class="form-inline">
+        <input type="text" id="eventName" placeholder="Room Name" required>
+        <select id="eventType">
+            <option value="Meeting">Meeting</option>
+            <option value="Wedding">Wedding</option>
+            <option value="Birthday">Birthday</option>
+            <option value="Conference">Conference</option>
+        </select>
+        <input type="number" id="eventCapacity" placeholder="Capacity (people)" required>
+        <input type="number" id="eventPrice" placeholder="Price (FCFA)" required>
+        <button onclick="addEventRoom()" data-translate="event_add">Add Room</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th data-translate="th_name">Name</th>
+            <th data-translate="th_type">Type</th>
+            <th data-translate="event_capacity">Capacity</th>
+            <th data-translate="th_price">Price</th>
+            <th data-translate="th_status">Status</th>
+            <th data-translate="th_actions">Action</th>
+        </tr>
+        </thead>
+        <tbody id="eventTableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    function logout() { sessionStorage.removeItem('isLoggedIn'); window.location.href = 'login.html'; }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedLang = localStorage.getItem('preferredLang') || 'en';
+        const selector = document.querySelector('.lang-selector');
+        if(selector) selector.value = savedLang;
+        applyTranslations(savedLang);
+        loadEvents();
+    });
+
+    function loadEvents() {
+        fetch('http://localhost:8081/api/events')
+            .then(res => res.json())
+            .then(events => {
+                const tableBody = document.getElementById('eventTableBody');
+                tableBody.innerHTML = '';
+                events.forEach(ev => {
+                    let badge = ev.status === 'Available' ? '<span class="badge-available">Available</span>' : '<span class="badge-booked">Booked</span>';
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${ev.id}</td>
+                            <td>${ev.name}</td>
+                            <td>${ev.type}</td>
+                            <td>${ev.capacity} pers.</td>
+                            <td>${ev.price} FCFA</td>
+                            <td>${badge}</td>
+                            <td><button onclick="bookEvent(${ev.id})" style="background:#ffc107; color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">Book</button></td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function addEventRoom() {
+        const data = {
+            name: document.getElementById('eventName').value,
+            type: document.getElementById('eventType').value,
+            capacity: parseInt(document.getElementById('eventCapacity').value),
+            price: parseFloat(document.getElementById('eventPrice').value),
+            status: 'Available'
+        };
+        fetch('http://localhost:8081/api/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+        .then(res => {
+            if(res.ok) {
+                document.getElementById('eventName').value = ''; document.getElementById('eventCapacity').value = ''; document.getElementById('eventPrice').value = '';
+                loadEvents();
+            }
+        });
+    }
+
+    function bookEvent(id) {
+        if(confirm("Confirmer la réservation de cette salle ?")) {
+            fetch(`http://localhost:8081/api/events/${id}`)
+                .then(res => res.json())
+                .then(room => {
+                    room.status = 'Booked';
+                    return fetch(`http://localhost:8081/api/events/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(room) });
+                })
+                .then(res => { if(res.ok) loadEvents(); });
+        }
+    }
+</script>
+</body>
+</html>

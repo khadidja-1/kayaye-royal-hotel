@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Digital Room Key - Paradise Hotel</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; }
+        .key-card { background: linear-gradient(135deg, #1abc9c, #16a085); padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; max-width: 350px; width: 100%; }
+        .key-icon { font-size: 60px; margin-bottom: 20px; }
+        h2 { margin-bottom: 10px; }
+        .room-number { font-size: 64px; font-weight: bold; margin: 20px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .client-name { font-size: 20px; margin-bottom: 30px; opacity: 0.9; }
+        .unlock-btn { background-color: white; color: #16a085; border: none; padding: 15px 40px; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; transition: transform 0.2s; width: 100%; }
+        .unlock-btn:hover { transform: scale(1.05); }
+        .unlock-btn:active { transform: scale(0.95); }
+        .status { margin-top: 20px; font-size: 14px; opacity: 0.8; height: 20px;}
+        .error { color: #e74c3c; background: white; padding: 20px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="key-card" id="keyCard">
+    <div class="key-icon">🔑</div>
+    <h2>Digital Room Key</h2>
+    <div class="client-name" id="clientName">Loading...</div>
+
+    <div class="room-number" id="roomNumber">-</div>
+
+    <button class="unlock-btn" onclick="unlockDoor()">UNLOCK DOOR</button>
+    <div class="status" id="status"></div>
+</div>
+
+<script>
+    // NOUVELLE MÉTHODE DE RÉCUPÉRATION (Plus robuste)
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),
+            results = regex.exec(window.location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    const reservationId = getParameterByName('id');
+
+    if (!reservationId) {
+        document.getElementById('keyCard').innerHTML = '<div class="error">Error: No reservation ID provided.<br><br>Please make sure you clicked the link generated after booking.</div>';
+    } else {
+        // On va chercher les infos de la réservation
+        fetch(`http://localhost:8081/api/reservations/digital-key/${reservationId}`)
+            .then(res => {
+                if(!res.ok) throw new Error("Reservation not found");
+                return res.json();
+            })
+            .then(reservation => {
+                document.getElementById('clientName').innerText = "Welcome, " + (reservation.client ? reservation.client.name : "Guest");
+                document.getElementById('roomNumber').innerText = reservation.room ? "Room " + reservation.room.roomNumber : "N/A";
+            })
+            .catch(err => {
+                document.getElementById('keyCard').innerHTML = '<div class="error">Reservation not found or invalid link.</div>';
+            });
+    }
+
+    function unlockDoor() {
+        const btn = document.querySelector('.unlock-btn');
+        const status = document.getElementById('status');
+
+        status.innerText = "Connecting to door...";
+        btn.innerText = "Unlocking...";
+        btn.style.opacity = "0.7";
+
+        setTimeout(() => {
+            status.innerText = "✅ Door Unlocked! Please enter.";
+            status.style.color = "#fff";
+            btn.innerText = "UNLOCK DOOR";
+            btn.style.opacity = "1";
+
+            setTimeout(() => { status.innerText = ""; }, 3000);
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>

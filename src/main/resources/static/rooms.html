@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kayaye Royal Hotel - Rooms</title>
+    <script src="translations.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; margin: 0; }
+        .container { max-width: 1100px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+
+        /* MENU PROPRE */
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #1a252f; padding: 15px 20px; border-radius: 8px; flex-wrap: wrap; gap: 10px;}
+        .nav-links { display: flex; flex-wrap: wrap; gap: 10px; align-items: center;}
+        .nav-links a { text-decoration: none; color: white; font-weight: bold; font-size: 13px;}
+        .nav-links a.active { color: #d4af37; text-decoration: underline; }
+        .nav-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap;}
+        .lang-selector { background: #d4af37; color: #1a252f; border: none; padding: 6px 8px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 13px;}
+        .btn-website { text-decoration: none; color: #2ecc71; font-weight: bold; font-size: 13px; white-space: nowrap;}
+        .btn-logout { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; white-space: nowrap;}
+
+        h2 { color: #333; }
+        .form-inline { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .form-inline input, .form-inline select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .form-inline button { padding: 10px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #1a252f; color: #d4af37; }
+        .btn-edit { background-color: #ffc107; color: #333; padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px;}
+        .btn-danger { background-color: #dc3545; color: white; padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+
+        /* STYLE DE LA FENÊTRE MODALE */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 10% auto; padding: 20px; border-radius: 8px; width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .modal-content input, .modal-content select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;}
+        .modal-content label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px;}
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="nav">
+        <div class="nav-links">
+            <a href="dashboard.html" data-translate="nav_dash">Dashboard</a>
+            <a href="clients.html" data-translate="nav_clients">Clients</a>
+            <a href="rooms.html" class="active" data-translate="nav_rooms">Rooms</a>
+            <a href="reservations.html" data-translate="nav_bookings">Bookings</a>
+            <a href="employees.html" data-translate="nav_employees">Employees</a>
+            <a href="restaurant.html" data-translate="nav_rest">Restaurant</a>
+            <a href="housekeeping.html" data-translate="nav_house">Housekeeping</a>
+            <a href="inventory.html" data-translate="nav_inv">Inventory</a>
+            <a href="events.html" data-translate="nav_events">Events</a>
+        </div>
+        <div class="nav-actions">
+            <select class="lang-selector" onchange="applyTranslations(this.value)">
+                <option value="en">🇬🇧 English</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="ar">🇹🇩 العربية</option>
+            </select>
+            <a href="index.html" target="_blank" class="btn-website" data-translate="nav_website">🌐 View Site</a>
+            <button class="btn-logout" onclick="logout()" data-translate="btn_logout">Logout</button>
+        </div>
+    </div>
+
+    <h2 data-translate="rooms_title">Room Management</h2>
+
+    <div class="form-inline">
+        <input type="text" id="roomNumber" placeholder="Room Number" required>
+        <select id="type">
+            <option value="Single">Single</option>
+            <option value="Double">Double</option>
+            <option value="Suite">Suite</option>
+        </select>
+        <input type="number" id="price" placeholder="Price (FCFA)" required>
+        <select id="status">
+            <option value="Available">Available</option>
+            <option value="Occupied">Occupied</option>
+            <option value="Cleaning">Cleaning</option>
+            <option value="Maintenance">Maintenance</option>
+        </select>
+        <button onclick="addRoom()" data-translate="rooms_add">Add Room</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th data-translate="th_room_num">Room Number</th>
+            <th data-translate="th_type">Type</th>
+            <th data-translate="th_price">Price</th>
+            <th data-translate="th_status">Status</th>
+            <th data-translate="th_actions">Actions</th>
+        </tr>
+        </thead>
+        <tbody id="roomTableBody"></tbody>
+    </table>
+</div>
+
+<!-- FENÊTRE DE MODIFICATION (MODALE) -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3>Edit Room</h3>
+        <input type="hidden" id="editRoomId">
+
+        <label>Room Number</label>
+        <input type="text" id="editRoomNumber">
+
+        <label>Type</label>
+        <select id="editType">
+            <option value="Single">Single</option>
+            <option value="Double">Double</option>
+            <option value="Suite">Suite</option>
+        </select>
+
+        <label>Price (FCFA)</label>
+        <input type="number" id="editPrice">
+
+        <label>Status</label>
+        <select id="editStatus">
+            <option value="Available">Available</option>
+            <option value="Occupied">Occupied</option>
+            <option value="Cleaning">Cleaning</option>
+            <option value="Maintenance">Maintenance</option>
+        </select>
+
+        <button onclick="saveRoomEdit()" style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;">Save Changes</button>
+    </div>
+</div>
+
+<script>
+    function logout() { sessionStorage.removeItem('isLoggedIn'); window.location.href = 'login.html'; }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedLang = localStorage.getItem('preferredLang') || 'en';
+        const selector = document.querySelector('.lang-selector');
+        if(selector) selector.value = savedLang;
+        applyTranslations(savedLang);
+        loadRooms();
+    });
+
+    function loadRooms() {
+        fetch('http://localhost:8081/api/rooms')
+            .then(res => res.json())
+            .then(rooms => {
+                const tableBody = document.getElementById('roomTableBody');
+                tableBody.innerHTML = '';
+                rooms.forEach(room => {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${room.id}</td>
+                            <td>${room.roomNumber}</td>
+                            <td>${room.type}</td>
+                            <td>${room.price} FCFA</td>
+                            <td>${room.status}</td>
+                            <td>
+                                <button class="btn-edit" onclick="openEditModal(${room.id}, '${room.roomNumber}', '${room.type}', ${room.price}, '${room.status}')">Edit</button>
+                                <button class="btn-danger" onclick="deleteRoom(${room.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function addRoom() {
+        const roomData = {
+            roomNumber: document.getElementById('roomNumber').value,
+            type: document.getElementById('type').value,
+            price: parseFloat(document.getElementById('price').value),
+            status: document.getElementById('status').value
+        };
+        fetch('http://localhost:8081/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(roomData) })
+        .then(res => { if(res.ok) { document.getElementById('roomNumber').value=''; document.getElementById('price').value=''; loadRooms(); } });
+    }
+
+    function deleteRoom(id) {
+        if(confirm("Delete this room?")) {
+            fetch(`http://localhost:8081/api/rooms/${id}`, { method: 'DELETE' }).then(res => { if(res.ok) loadRooms(); });
+        }
+    }
+
+    // --- LOGIQUE DE LA FENÊTRE MODALE ---
+    function openEditModal(id, number, type, price, status) {
+        document.getElementById('editRoomId').value = id;
+        document.getElementById('editRoomNumber').value = number;
+        document.getElementById('editType').value = type;
+        document.getElementById('editPrice').value = price;
+        document.getElementById('editStatus').value = status;
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    function saveRoomEdit() {
+        const id = document.getElementById('editRoomId').value;
+        const updatedData = {
+            roomNumber: document.getElementById('editRoomNumber').value,
+            type: document.getElementById('editType').value,
+            price: parseFloat(document.getElementById('editPrice').value),
+            status: document.getElementById('editStatus').value
+        };
+
+        fetch(`http://localhost:8081/api/rooms/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData)
+        })
+        .then(res => {
+            if(res.ok) {
+                closeModal();
+                loadRooms();
+                alert("Room updated successfully!");
+            } else {
+                alert("Error updating room.");
+            }
+        });
+    }
+</script>
+</body>
+</html>

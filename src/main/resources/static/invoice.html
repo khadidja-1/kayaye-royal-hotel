@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hotel Invoice</title>
+    <!-- Librairie pour générer le PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px; }
+        .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); background-color: #fff; border-radius: 8px;}
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #007bff; padding-bottom: 20px; margin-bottom: 20px; }
+        .header h1 { color: #007bff; margin: 0; }
+        .details { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; color: #333; }
+        .total-section { text-align: right; font-size: 20px; font-weight: bold; color: #333; margin-top: 20px; border-top: 2px solid #007bff; padding-top: 20px;}
+        .grand-total { font-size: 28px; color: #28a745; }
+
+        /* Styles des boutons */
+        .btn-print { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 20px; width: 100%; }
+        .btn-print:hover { background-color: #0056b3; }
+        .btn-pdf { background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; width: 100%; }
+        .btn-pdf:hover { background-color: #c82333; }
+
+        /* Cacher les boutons lors de l'impression ou de la génération PDF */
+        @media print {
+            .btn-print, .btn-pdf { display: none; }
+            body { background-color: white; padding: 0; }
+            .invoice-box { box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="invoice-box" id="invoiceContent">
+    <div class="header">
+        <div>
+            <h1>PARADISE HOTEL</h1>
+            <p>KN2 Main Street, City<br>Phone: +250 788 880 023</p>
+        </div>
+        <div style="text-align: right;">
+            <h3>INVOICE</h3>
+            <p>Date: <span id="invoiceDate"></span></p>
+        </div>
+    </div>
+
+    <div class="details">
+        <div>
+            <strong>Billed To:</strong><br>
+            <span id="clientName"></span><br>
+            <span id="clientEmail"></span>
+        </div>
+        <div style="text-align: right;">
+            <strong>Room Number:</strong> <span id="roomNumber"></span><br>
+            <strong>Check-In:</strong> <span id="checkIn"></span><br>
+            <strong>Check-Out:</strong> <span id="checkOut"></span>
+        </div>
+    </div>
+
+    <!-- Tableau de la chambre -->
+    <table>
+        <thead>
+        <tr>
+            <th>Description</th>
+            <th>Nights</th>
+            <th>Price / Night</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Room Accommodation</td>
+            <td id="nights"></td>
+            <td id="price"></td>
+            <td id="subtotalRoom"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Tableau de la restauration -->
+    <div id="restaurantSection" style="display:none;">
+        <h4 style="margin-bottom: 10px;">Restaurant & Bar Orders</h4>
+        <table>
+            <thead>
+            <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+            </thead>
+            <tbody id="foodOrdersBody">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="total-section">
+        Room Total: <span id="roomTotalDisplay"></span><br>
+        Restaurant Total: <span id="foodTotalDisplay">$0.00</span>
+        <br><br>
+        Total Due: <span class="grand-total" id="grandTotal">$0.00</span>
+    </div>
+
+    <!-- BOUTONS D'ACTION -->
+    <button class="btn-print" onclick="window.print()">Print Invoice</button>
+    <button class="btn-pdf" onclick="downloadPDF()">📥 Download PDF</button>
+</div>
+
+<script>
+    // --- 1. RÉCUPÉRATION DES DONNÉES ---
+    const urlParams = new URLSearchParams(window.location.search);
+
+    document.getElementById('invoiceDate').innerText = new Date().toLocaleDateString();
+
+    const clientId = urlParams.get('clientId');
+    const name = urlParams.get('name');
+    const email = urlParams.get('email');
+    const room = urlParams.get('room');
+    const checkIn = urlParams.get('checkIn');
+    const checkOut = urlParams.get('checkOut');
+    const price = parseFloat(urlParams.get('price'));
+
+    document.getElementById('clientName').innerText = name;
+    document.getElementById('clientEmail').innerText = email;
+    document.getElementById('roomNumber').innerText = room;
+    document.getElementById('checkIn').innerText = checkIn;
+    document.getElementById('checkOut').innerText = checkOut;
+    document.getElementById('price').innerText = "$" + price.toFixed(2);
+
+    // --- 2. CALCULS DES PRIX ---
+    const date1 = new Date(checkIn);
+    const date2 = new Date(checkOut);
+    const diffTime = Math.abs(date2 - date1);
+    const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const roomTotal = price * nights;
+
+    document.getElementById('nights').innerText = nights;
+    document.getElementById('subtotalRoom').innerText = "$" + roomTotal.toFixed(2);
+    document.getElementById('roomTotalDisplay').innerText = "$" + roomTotal.toFixed(2);
+
+    // --- 3. RÉCUPÉRATION DES COMMANDES RESTAURANT ---
+    let foodTotal = 0;
+
+    if (clientId) {
+        fetch(`http://localhost:8081/api/orders`)
+            .then(res => res.json())
+            .then(orders => {
+                const clientOrders = orders.filter(o => o.client && o.client.id == clientId);
+
+                if (clientOrders.length > 0) {
+                    document.getElementById('restaurantSection').style.display = 'block';
+                    const tbody = document.getElementById('foodOrdersBody');
+
+                    clientOrders.forEach(order => {
+                        const itemTotal = order.foodItem.price * order.quantity;
+                        foodTotal += itemTotal;
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${order.foodItem.name}</td>
+                                <td>${order.quantity}</td>
+                                <td>$${order.foodItem.price.toFixed(2)}</td>
+                                <td>$${itemTotal.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('foodTotalDisplay').innerText = "$" + foodTotal.toFixed(2);
+                }
+
+                const grandTotal = roomTotal + foodTotal;
+                document.getElementById('grandTotal').innerText = "$" + grandTotal.toFixed(2);
+            })
+            .catch(error => {
+                console.error("Erreur chargement repas:", error);
+                document.getElementById('grandTotal').innerText = "$" + roomTotal.toFixed(2);
+            });
+    } else {
+        document.getElementById('grandTotal').innerText = "$" + roomTotal.toFixed(2);
+    }
+
+    // --- 4. FONCTION DE TÉLÉCHARGEMENT PDF ---
+    function downloadPDF() {
+        // On cache temporairement les boutons pour qu'ils n'apparaissent pas sur le PDF
+        const buttons = document.querySelectorAll('.btn-print, .btn-pdf');
+        buttons.forEach(btn => btn.style.display = 'none');
+
+        const element = document.getElementById('invoiceContent');
+
+        const opt = {
+            margin:       0.5,
+            filename:     `Invoice_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Générer et télécharger le PDF
+        html2pdf().set(opt).from(element).save().then(() => {
+            // Réafficher les boutons après la génération
+            buttons.forEach(btn => btn.style.display = 'block');
+        });
+    }
+</script>
+
+</body>
+</html>

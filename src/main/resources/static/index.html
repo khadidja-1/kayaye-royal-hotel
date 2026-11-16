@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>KAYAYE ROYAL HOTEL - Luxury & Comfort</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f8f9fa; color: #333; }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1542314831-c6a4d1424b18?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        .hero h1 { font-size: 52px; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); font-weight: bold; }
+        .hero p { font-size: 22px; margin-bottom: 30px; }
+
+        /* SÉLECTEUR DE LANGUE */
+        .lang-switch {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .lang-switch select { border: none; background: transparent; font-weight: bold; cursor: pointer; font-size: 14px; outline: none; }
+
+        .btn-login { position: absolute; top: 20px; right: 30px; background-color: rgba(255,255,255,0.2); color: white; padding: 10px 20px; border: 1px solid white; border-radius: 5px; text-decoration: none; font-weight: bold; transition: 0.3s; }
+        .btn-login:hover { background-color: white; color: #333; }
+
+        /* BOUTON DORÉ PRINCIPAL */
+        .btn-staff {
+            display: inline-block;
+            padding: 15px 40px;
+            background-color: #d4af37;
+            color: #1a252f;
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        .btn-staff:hover {
+            transform: translateY(-3px);
+            background-color: #f1c40f;
+        }
+
+        /* Experience Section */
+        .experience-section { background-color: white; padding: 60px 20px; text-align: center; }
+        .experience-section h2 { color: #2c3e50; font-size: 32px; margin-bottom: 15px; }
+        .experience-section p { color: #7f8c8d; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+
+        /* CARROUSEL */
+        #carousel { max-width: 900px; height: 450px; margin: 0 auto 50px auto; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; background-color: #000; }
+        .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; transition: opacity 1s ease-in-out; }
+
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1100px; margin: auto; }
+        .gallery-item { position: relative; border-radius: 10px; overflow: hidden; height: 250px; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .gallery-item:hover img { transform: scale(1.1); }
+        .gallery-caption { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; padding: 15px; text-align: left; font-weight: bold; }
+
+        /* Rooms Section */
+        .rooms-container { max-width: 1200px; margin: 60px auto; padding: 0 20px; }
+        .section-title { text-align: center; font-size: 32px; margin-bottom: 40px; color: #2c3e50; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+
+        .room-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .room-card:hover { transform: translateY(-5px); }
+        .room-img { width: 100%; height: 200px; object-fit: cover; }
+        .room-info { padding: 20px; }
+        .room-info h3 { font-size: 22px; margin-bottom: 10px; color: #2c3e50; }
+        .room-info p { color: #7f8c8d; margin-bottom: 15px; }
+        .price { font-size: 24px; font-weight: bold; color: #2980b9; margin-bottom: 15px; }
+
+        .btn-book { display: block; width: 100%; text-align: center; background-color: #27ae60; color: white; padding: 12px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .btn-book:hover { background-color: #2ecc71; }
+
+        .empty-msg { text-align: center; font-size: 18px; color: #7f8c8d; width: 100%; grid-column: 1 / -1; }
+
+        /* MODAL STYLES */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+        .modal-content { background: white; margin: 5% auto; padding: 30px; border-radius: 10px; width: 400px; max-width: 90%; position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 28px; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;}
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .btn-submit { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        /* FOOTER */
+        footer { background-color: #1a252f; color: white; text-align: center; padding: 40px 20px; margin-top: 50px; }
+        footer h3 { margin-bottom: 10px; color: #d4af37;}
+        footer p { font-size: 14px; margin-bottom: 10px; }
+        footer a { color: #3498db; text-decoration: none; margin: 0 10px; }
+
+        /* BOUTON D'APPEL FLOTTANT */
+        .call-btn {
+            position: fixed; bottom: 30px; right: 30px; background-color: #27ae60; color: white;
+            width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-decoration: none; z-index: 1000; transition: transform 0.3s;
+        }
+        .call-btn:hover { transform: scale(1.1); }
+
+        /* STYLES DU CHATBOT */
+        #chatbot-btn {
+            position: fixed; bottom: 100px; right: 30px; background-color: #2980b9; color: white;
+            width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000; transition: transform 0.3s;
+        }
+        #chatbot-btn:hover { transform: scale(1.1); }
+
+        #chat-window {
+            display: none; position: fixed; bottom: 170px; right: 30px; width: 320px; height: 400px;
+            background: white; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 1000; flex-direction: column; overflow: hidden; border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<!-- SÉLECTEUR DE LANGUE -->
+<div class="lang-switch">
+    <select id="languageSelector" onchange="changeLanguage(this.value)">
+        <option value="fr">Français</option>
+        <option value="en">English</option>
+        <option value="ar"> العربية</option>
+    </select>
+</div>
+
+<a href="login.html" class="btn-login" id="staff-login-text">Staff Login</a>
+
+<!-- BOUTON D'APPEL FLOTTANT -->
+<a href="tel:+23566000000" class="call-btn" title="Call Reception">📞</a>
+
+<!-- CHATBOT CONCIERGE -->
+<div id="chatbot-btn" onclick="toggleChat()">💬</div>
+
+<div id="chat-window">
+    <div style="background: #1a252f; color: #d4af37; padding: 15px; font-weight: bold; display: flex; justify-content: space-between;">
+        <span id="chat-header">🤖 Kayaye Concierge</span>
+        <span style="cursor: pointer; color: white;" onclick="toggleChat()">✖</span>
+    </div>
+    <div id="chat-messages" style="flex: 1; padding: 15px; overflow-y: auto; font-size: 14px; display: flex; flex-direction: column; gap: 10px;">
+        <div id="bot-welcome" style="background: #f1f1f1; padding: 10px; border-radius: 10px; align-self: flex-start; max-width: 80%;">
+            Bonjour ! Je suis votre concierge virtuel. Comment puis-je vous aider aujourd'hui ?
+        </div>
+    </div>
+    <div style="display: flex; border-top: 1px solid #ddd;">
+        <input type="text" id="chat-input" placeholder="Écrivez un message..." style="flex: 1; border: none; padding: 15px; outline: none;" onkeypress="handleChatEnter(event)">
+        <button onclick="sendChatMessage()" style="background: #1a252f; color: white; border: none; padding: 0 20px; cursor: pointer; font-weight: bold;">Envoyer</button>
+    </div>
+</div>
+
+<div class="hero">
+    <h1 id="main-title">Bienvenue au KAYAYE ROYAL HOTEL</h1>
+    <p id="sub-title">Un séjour d'exception au cœur du luxe et du confort.</p>
+
+    <!-- NOUVEAU GROS BOUTON DORÉ -->
+    <div style="margin-top: 30px;">
+        <a href="login.html" class="btn-staff" id="btn-access">🔐 Accès Personnel (Entrer)</a>
+    </div>
+</div>
+
+<!-- EXPERIENCE SECTION -->
+<div class="experience-section">
+    <h2 id="exp-title">Découvrez le Kayaye Royal Hotel</h2>
+    <p id="exp-desc">Profitez de nos équipements de classe mondiale, de notre piscine à débordement à notre restaurant primé. Vivez l'excellence à N'Djamena.</p>
+
+    <div id="carousel">
+        <img src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" class="carousel-img" style="opacity: 1;">
+        <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" class="carousel-img" style="opacity: 0;">
+        <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" class="carousel-img" style="opacity: 0;">
+        <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" class="carousel-img" style="opacity: 0;">
+    </div>
+
+    <div class="gallery-grid">
+        <div class="gallery-item">
+            <img src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Piscine">
+            <div class="gallery-caption" id="cap-pool">🏊‍♂️ Piscine à débordement</div>
+        </div>
+        <div class="gallery-item">
+            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Restaurant">
+            <div class="gallery-caption" id="cap-rest">🍽️ Restaurant Gastronomique</div>
+        </div>
+        <div class="gallery-item">
+            <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Spa">
+            <div class="gallery-caption" id="cap-spa">💆‍♀️ Spa de Luxe</div>
+        </div>
+    </div>
+</div>
+
+<div class="rooms-container">
+    <h2 class="section-title" id="rooms-title">Nos Chambres Disponibles</h2>
+    <div class="grid" id="roomsGrid"></div>
+</div>
+
+<!-- MODAL DE RESERVATION -->
+<div id="bookingModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2 style="margin-top:0; color:#1a252f; text-align:center;" id="modal-title">Réservez votre séjour</h2>
+
+        <input type="hidden" id="bookRoomId">
+
+        <div class="form-group">
+            <label id="label-name">Nom Complet</label>
+            <input type="text" id="bookName" required>
+        </div>
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="bookEmail" required>
+        </div>
+
+        <div class="form-group">
+            <label id="label-phone">Téléphone</label>
+            <input type="text" id="bookPhone" required>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex:1;">
+                <label id="label-in">Arrivée</label>
+                <input type="date" id="bookCheckIn" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label id="label-out">Départ</label>
+                <input type="date" id="bookCheckOut" required>
+            </div>
+        </div>
+
+        <button class="btn-submit" onclick="submitBooking()" id="btn-confirm">Confirmer la Réservation</button>
+
+        <div id="bookingMsg" style="text-align:center; margin-top:15px; font-weight:bold;"></div>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <h3>KAYAYE ROYAL HOTEL</h3>
+    <p>N'Djamena, Tchad</p>
+    <p>Téléphone : +235 66 00 00 00 | Email : contact@kayayeroyal.td</p>
+    <div style="margin: 20px 0;">
+        <a href="#">Facebook</a> |
+        <a href="#">Instagram</a> |
+        <a href="#">Twitter</a>
+    </div>
+    <p style="font-size: 12px; color: #bdc3c7;" id="footer-text">©️ 2026 Kayaye Royal Hotel Management System. All rights reserved.</p>
+</footer>
+
+<script>
+    // --- VARIABLE POUR LES IMAGES ---
+    const images = {
+        'Single': 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'Double': 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'Suite': 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    };
+
+    // --- DICTIONNAIRE DE TRADUCTION ---
+    const translations = {
+        'fr': {
+            main_title: "Bienvenue au KAYAYE ROYAL HOTEL",
+            sub_title: "Un séjour d'exception au cœur du luxe et du confort.",
+            btn_access: "🔐 Accès Personnel (Entrer)",
+            exp_title: "Découvrez le Kayaye Royal Hotel",
+            exp_desc: "Profitez de nos équipements de classe mondiale, de notre piscine à débordement à notre restaurant primé. Vivez l'excellence à N'Djamena.",
+            rooms_title: "Nos Chambres Disponibles",
+            modal_title: "Réservez votre séjour",
+            label_name: "Nom Complet",
+            label_phone: "Téléphone",
+            label_in: "Arrivée",
+            label_out: "Départ",
+            btn_confirm: "Confirmer la Réservation",
+            staff_login: "Staff Login",
+            footer_text: "©️ 2026 Kayaye Royal Hotel Management System. Tous droits réservés.",
+            cap_pool: "🏊‍♂️ Piscine à débordement",
+            cap_rest: "🍽️ Restaurant Gastronomique",
+            cap_spa: "💆‍♀️ Spa de Luxe",
+            chat_welcome: "Bonjour ! Je suis votre concierge virtuel. Comment puis-je vous aider aujourd'hui ?",
+            chat_placeholder: "Écrivez un message...",
+            chat_send: "Envoyer"
+        },
+        'en': {
+            main_title: "Welcome to KAYAYE ROYAL HOTEL",
+            sub_title: "An exceptional stay in the heart of luxury and comfort.",
+            btn_access: "🔐 Staff Access (Enter)",
+            exp_title: "Discover Kayaye Royal Hotel",
+            exp_desc: "Enjoy our world-class amenities, from our infinity pool to our award-winning restaurant. Experience excellence in N'Djamena.",
+            rooms_title: "Our Available Rooms",
+            modal_title: "Book Your Stay",
+            label_name: "Full Name",
+            label_phone: "Phone",
+            label_in: "Check-In",
+            label_out: "Check-Out",
+            btn_confirm: "Confirm Reservation",
+            staff_login: "Staff Login",
+            footer_text: "©️ 2026 Kayaye Royal Hotel Management System. All rights reserved.",
+            cap_pool: "🏊‍♂️ Infinity Pool",
+            cap_rest: "🍽️ Fine Dining Restaurant",
+            cap_spa: "💆‍♀️ Luxury Spa",
+            chat_welcome: "Hello! I am your virtual concierge. How can I help you today?",
+            chat_placeholder: "Type a message...",
+            chat_send: "Send"
+        },
+        'ar': {
+            main_title: "مرحبًا بكم في فندق كايي رويال",
+            sub_title: "إقامة استثنائية في قلب الفخامة والراحة.",
+            btn_access: "🔐 دخول الموظفين",
+            exp_title: "اكتشف فندق كايي رويال",
+            exp_desc: "استمتع بوسائل الراحة العالمية لدينا، من المسبح اللامتناهي إلى مطعمنا الحائز على جوائز. عش التميز في نجامينا.",
+            rooms_title: "غرفنا المتاحة",
+            modal_title: "احجز إقامتك",
+            label_name: "الاسم الكامل",
+            label_phone: "الهاتف",
+            label_in: "تاريخ الوصول",
+            label_out: "تاريخ المغادرة",
+            btn_confirm: "تأكيد الحجز",
+            staff_login: "دخول الموظفين",
+            footer_text: "©️ 2026 نظام إدارة فندق كايي رويال. جميع الحقوق محفوظة.",
+            cap_pool: "🏊‍♂️ مسبح لا متناهي",
+            cap_rest: "🍽️ مطعم فاخر",
+            cap_spa: "💆‍♀️ سبا فاخر",
+            chat_welcome: "مرحبًا! أنا الكونسيرج الافتراضي. كيف يمكنني مساعدتك اليوم؟",
+            chat_placeholder: "اكتب رسالة...",
+            chat_send: "إرسال"
+        }
+    };
+
+    function changeLanguage(lang) {
+        localStorage.setItem('preferredLang', lang);
+        const t = translations[lang];
+
+        document.getElementById('main-title').innerText = t.main_title;
+        document.getElementById('sub-title').innerText = t.sub_title;
+        document.getElementById('btn-access').innerText = t.btn_access;
+        document.getElementById('exp-title').innerText = t.exp_title;
+        document.getElementById('exp-desc').innerText = t.exp_desc;
+        document.getElementById('rooms-title').innerText = t.rooms_title;
+        document.getElementById('modal-title').innerText = t.modal_title;
+        document.getElementById('label-name').innerText = t.label_name;
+        document.getElementById('label-phone').innerText = t.label_phone;
+        document.getElementById('label-in').innerText = t.label_in;
+        document.getElementById('label-out').innerText = t.label_out;
+        document.getElementById('btn-confirm').innerText = t.btn_confirm;
+        document.getElementById('staff-login-text').innerText = t.staff_login;
+        document.getElementById('footer-text').innerText = t.footer_text;
+        document.getElementById('cap-pool').innerText = t.cap_pool;
+        document.getElementById('cap-rest').innerText = t.cap_rest;
+        document.getElementById('cap-spa').innerText = t.cap_spa;
+
+        document.getElementById('bot-welcome').innerText = t.chat_welcome;
+        document.getElementById('chat-input').placeholder = t.chat_placeholder;
+        document.querySelector('#chat-window button').innerText = t.chat_send;
+
+        if (lang === 'ar') {
+            document.body.style.direction = 'rtl';
+        } else {
+            document.body.style.direction = 'ltr';
+        }
+    }
+
+    // Au chargement, on applique la langue sauvegardée
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedLang = localStorage.getItem('preferredLang') || 'fr';
+        document.getElementById('languageSelector').value = savedLang;
+        changeLanguage(savedLang);
+
+        // 1. Chargement des chambres
+        fetch('http://localhost:8081/api/rooms/available')
+            .then(res => res.json())
+            .then(rooms => {
+                const grid = document.getElementById('roomsGrid');
+                if (rooms.length === 0) {
+                    grid.innerHTML = '<div class="empty-msg">Désolé, aucune chambre n\'est disponible pour le moment.</div>';
+                    return;
+                }
+                rooms.forEach(room => {
+                    const imgUrl = images[room.type] || images['Single'];
+                    grid.innerHTML += `
+                        <div class="room-card">
+                            <img src="${imgUrl}" alt="${room.type} Room" class="room-img">
+                            <div class="room-info">
+                                <h3>Chambre ${room.type}</h3>
+                                <p>Numéro : ${room.roomNumber}</p>
+                                <div class="price">${room.price} FCFA <span style="font-size: 14px; font-weight: normal; color: #7f8c8d;">/ nuit</span></div>
+                                <button onclick="openModal(${room.id})" class="btn-book">Réserver Maintenant</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('roomsGrid').innerHTML = '<div class="empty-msg">Erreur de chargement.</div>';
+            });
+
+        // 2. Logique du Carrousel
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.carousel-img');
+        if (slides.length > 0) {
+            setInterval(() => {
+                slides[currentSlide].style.opacity = '0';
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].style.opacity = '1';
+            }, 4000);
+        }
+    });
+
+    function openModal(roomId) {
+        if (!roomId) { alert("Erreur: ID manquant."); return; }
+        document.getElementById('bookRoomId').value = roomId;
+        document.getElementById('bookingModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('bookingModal').style.display = 'none';
+        document.getElementById('bookingMsg').innerHTML = '';
+    }
+
+    async function submitBooking() {
+        const name = document.getElementById('bookName').value;
+        const email = document.getElementById('bookEmail').value;
+        const phone = document.getElementById('bookPhone').value;
+        const roomId = document.getElementById('bookRoomId').value;
+        const checkIn = document.getElementById('bookCheckIn').value;
+        const checkOut = document.getElementById('bookCheckOut').value;
+        const msg = document.getElementById('bookingMsg');
+
+        if(!name || !email || !phone || !checkIn || !checkOut || !roomId) {
+            msg.style.color = 'red';
+            msg.innerText = "Veuillez remplir tous les champs.";
+            return;
+        }
+
+        msg.style.color = 'blue';
+        msg.innerText = "Traitement en cours...";
+
+        try {
+            const clientRes = await fetch('http://localhost:8081/api/clients/public', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, email: email, contact: phone, accountNumber: "WEB-" + Date.now(), authorization: "Pending" })
+            });
+            if (!clientRes.ok) { msg.innerText = "Erreur création client."; return; }
+            const client = await clientRes.json();
+
+            const resRes = await fetch('http://localhost:8081/api/reservations', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clientId: client.id, roomId: parseInt(roomId), checkInDate: checkIn, checkOutDate: checkOut })
+            });
+
+            if (resRes.ok) {
+                const reservation = await resRes.json();
+                msg.style.color = 'green';
+                msg.innerHTML = `
+                    Réservation Réussie !<br><br>
+                    <a href="digital-key.html?id=${reservation.id}" target="_blank" style="display:inline-block; padding:10px 20px; background:#1a252f; color:#d4af37; text-decoration:none; border-radius:5px; font-weight:bold;">🔑 Voir ma Clé Digitale</a>
+                `;
+                document.getElementById('bookName').value = ''; document.getElementById('bookEmail').value = '';
+                document.getElementById('bookPhone').value = ''; document.getElementById('bookCheckIn').value = '';
+                document.getElementById('bookCheckOut').value = '';
+            } else { msg.style.color = 'red'; msg.innerText = 'Erreur.'; }
+        } catch (e) { msg.style.color = 'red'; msg.innerText = 'Erreur serveur.'; }
+    }
+
+    // --- LOGIQUE DU CHATBOT ---
+    function toggleChat() {
+        const chatWindow = document.getElementById('chat-window');
+        chatWindow.style.display = (chatWindow.style.display === 'none' || chatWindow.style.display === '') ? 'flex' : 'none';
+    }
+
+    function handleChatEnter(e) { if (e.key === 'Enter') sendChatMessage(); }
+
+    function sendChatMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim().toLowerCase();
+        if (message === '') return;
+
+        addMessage(input.value, 'user');
+        input.value = '';
+
+        setTimeout(() => {
+            const lang = localStorage.getItem('preferredLang') || 'fr';
+            let botReply = "Désolé, je n'ai pas compris.";
+
+            if (message.includes('piscine') || message.includes('pool')) {
+                botReply = (lang === 'fr') ? "Notre piscine est ouverte de 8h à 22h." : "Our pool is open from 8 AM to 10 PM.";
+            } else if (message.includes('wifi') || message.includes('internet')) {
+                botReply = (lang === 'fr') ? "Le Wi-Fi est gratuit dans tout l'hôtel." : "Wi-Fi is free throughout the hotel.";
+            } else if (message.includes('restaurant') || message.includes('manger') || message.includes('food')) {
+                botReply = (lang === 'fr') ? "Le restaurant est ouvert de 6h30 à 22h." : "The restaurant is open from 6:30 AM to 10 PM.";
+            } else if (message.includes('bonjour') || message.includes('hello') || message.includes('salut')) {
+                botReply = (lang === 'fr') ? "Bonjour ! Comment puis-je vous aider ?" : "Hello! How can I help you?";
+            } else if (message.includes('merci') || message.includes('thanks')) {
+                botReply = (lang === 'fr') ? "Avec plaisir !" : "You're welcome!";
+            }
+
+            addMessage(botReply, 'bot');
+        }, 800);
+    }
+
+    function addMessage(text, sender) {
+        const chatMessages = document.getElementById('chat-messages');
+        const msgDiv = document.createElement('div');
+        if (sender === 'user') { msgDiv.style.cssText = "background: #1a252f; color: white; padding: 10px; border-radius: 10px; align-self: flex-end; max-width: 80%;"; }
+        else { msgDiv.style.cssText = "background: #f1f1f1; color: #333; padding: 10px; border-radius: 10px; align-self: flex-start; max-width: 80%;"; }
+        msgDiv.innerText = text;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+</script>
+
+</body>
+</html>

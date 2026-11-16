@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kayaye Royal Hotel - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="translations.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 30px; margin: 0; }
+        .container { max-width: 1200px; margin: auto; }
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #1a252f; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); flex-wrap: wrap;}
+        .nav-links { display: flex; flex-wrap: wrap; gap: 15px; align-items: center;}
+        .nav-links a { text-decoration: none; color: white; font-weight: bold; font-size: 14px;}
+        .nav-links a.active { color: #d4af37; text-decoration: underline; }
+        .lang-selector { background: #d4af37; color: #1a252f; border: none; padding: 8px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-left: 15px;}
+        .nav-actions { display: flex; gap: 15px; align-items: center; }
+        .btn-website { text-decoration: none; color: #2ecc71; font-weight: bold; font-size: 14px; }
+        .btn-logout { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;}
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); text-align: center; border-bottom: 4px solid #007bff; }
+        .card h3 { margin: 0; color: #666; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;}
+        .card p { margin: 15px 0 0 0; font-size: 36px; font-weight: bold; color: #333; }
+        .card.clients { border-color: #17a2b8; }
+        .card.rooms { border-color: #28a745; }
+        .card.bookings { border-color: #ffc107; }
+        .card.revenue { border-color: #dc3545; }
+        .card.stock { border-color: #6f42c1; }
+        h2 { color: #333; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="nav">
+        <div class="nav-links">
+            <a href="dashboard.html" class="active" data-translate="nav_dash">Dashboard</a>
+            <a href="clients.html" data-translate="nav_clients">Clients</a>
+            <a href="rooms.html" data-translate="nav_rooms">Rooms</a>
+            <a href="reservations.html" data-translate="nav_bookings">Bookings</a>
+            <a href="employees.html" data-translate="nav_employees">Employees</a>
+            <a href="restaurant.html" data-translate="nav_rest">Restaurant</a>
+            <a href="housekeeping.html" data-translate="nav_house">Housekeeping</a>
+            <a href="inventory.html" data-translate="nav_inv">Inventory</a>
+            <a href="events.html" data-translate="nav_events">Events</a>
+        </div>
+        <div class="nav-actions">
+            <select class="lang-selector" onchange="applyTranslations(this.value)">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+            </select>
+            <a href="index.html" target="_blank" class="btn-website" data-translate="nav_website">🌐 View Website</a>
+            <button class="btn-logout" onclick="logout()" data-translate="btn_logout">Logout</button>
+        </div>
+    </div>
+
+    <h2 data-translate="welcome">Welcome to the Manager Dashboard</h2>
+
+    <div class="dashboard-grid">
+        <div class="card clients"><h3 data-translate="card_clients">Total Clients</h3><p id="totalClients">0</p></div>
+        <div class="card rooms"><h3 data-translate="card_rooms">Available Rooms</h3><p id="availableRooms">0</p></div>
+        <div class="card bookings"><h3 data-translate="card_bookings">Total Bookings</h3><p id="totalBookings">0</p></div>
+        <div class="card revenue"><h3 data-translate="card_revenue">Total Revenue (FCFA)</h3><p id="totalRevenue">0.00</p></div>
+        <div class="card stock"><h3 data-translate="card_stock">Low Stock Alerts</h3><p id="lowStockCount">0</p></div>
+    </div>
+
+    <div class="card" style="text-align: left;">
+        <h3 style="text-align: center; margin-bottom: 20px;" data-translate="chart_title">Revenue Breakdown</h3>
+        <div style="width: 100%; max-width: 600px; margin: auto;">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedLang = localStorage.getItem('preferredLang') || 'en';
+        const selector = document.querySelector('.lang-selector');
+        if(selector) selector.value = savedLang;
+        applyTranslations(savedLang);
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') window.location.href = 'login.html';
+        fetchDataForDashboard();
+    });
+
+    function logout() {
+        sessionStorage.removeItem('isLoggedIn');
+        window.location.href = 'login.html';
+    }
+
+    function fetchDataForDashboard() {
+        Promise.all([
+            fetch('http://localhost:8081/api/clients').then(res => res.json()),
+            fetch('http://localhost:8081/api/rooms').then(res => res.json()),
+            fetch('http://localhost:8081/api/reservations').then(res => res.json()),
+            fetch('http://localhost:8081/api/orders').then(res => res.json()),
+            fetch('http://localhost:8081/api/inventory').then(res => res.json())
+        ])
+        .then(([clients, rooms, reservations, orders, inventory]) => {
+            document.getElementById('totalClients').innerText = clients.length;
+            const availableRooms = rooms.filter(room => room.status === 'Available').length;
+            document.getElementById('availableRooms').innerText = availableRooms;
+            document.getElementById('totalBookings').innerText = reservations.length;
+
+            let roomRevenue = 0;
+            reservations.forEach(reservation => {
+                if (reservation.room && reservation.room.price && reservation.checkInDate && reservation.checkOutDate) {
+                    const checkIn = new Date(reservation.checkInDate);
+                    const checkOut = new Date(reservation.checkOutDate);
+                    const timeDiff = checkOut.getTime() - checkIn.getTime();
+                    let daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    if (daysDiff <= 0) daysDiff = 1;
+                    roomRevenue += (reservation.room.price * daysDiff);
+                }
+            });
+
+            let foodRevenue = 0;
+            orders.forEach(order => { foodRevenue += order.totalPrice; });
+            document.getElementById('totalRevenue').innerText = (roomRevenue + foodRevenue).toFixed(2);
+
+            let lowStockCount = 0;
+            inventory.forEach(item => { if (item.quantity <= item.minStock) lowStockCount++; });
+            const lowStockElement = document.getElementById('lowStockCount');
+            lowStockElement.innerText = lowStockCount;
+            lowStockElement.style.color = lowStockCount > 0 ? '#dc3545' : '#28a745';
+
+            renderChart(roomRevenue, foodRevenue);
+        }).catch(error => console.error("Erreur:", error));
+    }
+
+    function renderChart(roomRev, foodRev) {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Room Revenue', 'Restaurant Revenue'],
+                datasets: [{ label: 'Revenue', data: [roomRev, foodRev], backgroundColor: ['rgba(40, 167, 69, 0.8)', 'rgba(220, 53, 69, 0.8)'], borderWidth: 1 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room Service - Paradise Hotel</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: #555; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item-info h3 { color: #333; font-size: 18px; margin-bottom: 5px; }
+        .menu-item-info p { color: #7f8c8d; font-size: 14px; }
+        .menu-item-price { font-weight: bold; color: #2980b9; font-size: 18px; }
+        .btn-order { background-color: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; }
+        .btn-order:hover { background-color: #2ecc71; }
+        #message { text-align: center; margin-top: 20px; font-weight: bold; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍽️ Room Service</h1>
+    <p style="text-align:center; color:#666; margin-bottom: 30px;">Order food directly to your room!</p>
+
+    <div class="form-group">
+        <label>Your Full Name (as registered)</label>
+        <input type="text" id="clientName" placeholder="e.g. John Doe" required>
+    </div>
+
+    <h3 style="margin-bottom: 15px; color: #2c3e50;">Our Menu</h3>
+    <div id="menuList">
+        <!-- Le menu s'affichera ici -->
+    </div>
+
+    <p id="message"></p>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', loadMenu);
+
+    function loadMenu() {
+        fetch('http://localhost:8081/api/food')
+            .then(res => res.json())
+            .then(items => {
+                const menuList = document.getElementById('menuList');
+                menuList.innerHTML = '';
+
+                items.forEach(item => {
+                    menuList.innerHTML += `
+                        <div class="menu-item">
+                            <div class="menu-item-info">
+                                <h3>${item.name}</h3>
+                                <p>${item.category}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="menu-item-price">$${item.price.toFixed(2)}</div>
+                                <button class="btn-order" onclick="orderItem(${item.id})">Order</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+    }
+
+    function orderItem(foodItemId) {
+        const clientName = document.getElementById('clientName').value;
+        const msg = document.getElementById('message');
+
+        if (!clientName) {
+            msg.style.color = 'red';
+            msg.innerText = "Please enter your name first.";
+            return;
+        }
+
+        const quantity = prompt("How many do you want?", "1");
+        if (!quantity || isNaN(quantity) || quantity < 1) return;
+
+        const orderData = {
+            clientName: clientName,
+            foodItemId: foodItemId,
+            quantity: parseInt(quantity)
+        };
+
+        fetch('http://localhost:8081/api/orders/public-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        })
+        .then(async res => {
+            if (res.ok) {
+                msg.style.color = 'green';
+                msg.innerText = "✅ Order sent to the kitchen! It will be delivered to your room soon.";
+                setTimeout(() => { msg.innerText = ''; }, 5000);
+            } else {
+                const error = await res.text();
+                msg.style.color = 'red';
+                msg.innerText = "❌ Error: " + error;
+            }
+        })
+        .catch(err => {
+            msg.style.color = 'red';
+            msg.innerText = "❌ Server error. Please try again.";
+        });
+    }
+</script>
+
+</body>
+</html>

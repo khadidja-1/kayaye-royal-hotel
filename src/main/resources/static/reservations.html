@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kayaye Royal Hotel - Bookings</title>
+    <script src="translations.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; margin: 0; }
+        .container { max-width: 1200px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+
+        /* MENU PROPRE */
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #1a252f; padding: 15px 20px; border-radius: 8px; flex-wrap: wrap; gap: 15px;}
+        .nav-links { display: flex; flex-wrap: wrap; gap: 12px; align-items: center;}
+        .nav-links a { text-decoration: none; color: white; font-weight: bold; font-size: 14px;}
+        .nav-links a.active { color: #d4af37; text-decoration: underline; }
+        .nav-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;}
+        .lang-selector { background: #d4af37; color: #1a252f; border: none; padding: 8px; border-radius: 5px; font-weight: bold; cursor: pointer;}
+        .btn-website { text-decoration: none; color: #2ecc71; font-weight: bold; font-size: 14px; white-space: nowrap;}
+        .btn-logout { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; white-space: nowrap;}
+
+        h2 { color: #333; }
+        .form-inline { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;}
+        .form-inline select, .form-inline input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .form-inline button { padding: 10px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #1a252f; color: #d4af37; }
+        tr:hover { background-color: #f1f1f1; }
+
+        .search-box { padding: 10px; width: 300px; border: 1px solid #ccc; border-radius: 5px; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .badge-confirmed { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #2e7d32; }
+        .badge-checkedout { background-color: #f5f5f5; color: #757575; border: 1px solid #757575; }
+        .text-deleted { color: #999; font-style: italic; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="nav">
+        <div class="nav-links">
+            <a href="dashboard.html" data-translate="nav_dash">Dashboard</a>
+            <a href="clients.html" data-translate="nav_clients">Clients</a>
+            <a href="rooms.html" data-translate="nav_rooms">Rooms</a>
+            <a href="reservations.html" class="active" data-translate="nav_bookings">Bookings</a>
+            <a href="employees.html" data-translate="nav_employees">Employees</a>
+            <a href="restaurant.html" data-translate="nav_rest">Restaurant</a>
+            <a href="housekeeping.html" data-translate="nav_house">Housekeeping</a>
+            <a href="inventory.html" data-translate="nav_inv">Inventory</a>
+            <a href="events.html" data-translate="nav_events">Events</a>
+        </div>
+        <div class="nav-actions">
+            <select class="lang-selector" onchange="applyTranslations(this.value)">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+            </select>
+            <a href="index.html" target="_blank" class="btn-website" data-translate="nav_website">🌐 View Website</a>
+            <button class="btn-logout" onclick="logout()" data-translate="btn_logout">Logout</button>
+        </div>
+    </div>
+
+    <h2 data-translate="book_title">Make a Reservation</h2>
+
+    <div class="form-inline">
+        <select id="clientId" required><option value="">-- Select Client --</option></select>
+        <select id="roomId" required><option value="">-- Select Room --</option></select>
+        <label data-translate="book_in">Check-In:</label>
+        <input type="date" id="checkInDate" required>
+        <label data-translate="book_out">Check-Out:</label>
+        <input type="date" id="checkOutDate" required>
+        <button onclick="makeReservation()" data-translate="book_btn">Book Room</button>
+    </div>
+
+    <div style="margin-top: 30px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <h3 data-translate="book_current">Current Bookings</h3>
+        <input type="text" id="searchBooking" class="search-box" placeholder="🔍 Search..." onkeyup="filterReservations()">
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th data-translate="th_name">Client Name</th>
+            <th data-translate="th_room_num">Room Number</th>
+            <th data-translate="book_in">Check-In</th>
+            <th data-translate="book_out">Check-Out</th>
+            <th data-translate="th_status">Status</th>
+            <th data-translate="th_actions">Action</th>
+            <th data-translate="th_payment">Payment</th>
+        </tr>
+        </thead>
+        <tbody id="reservationTableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    let allReservationsData = [];
+    function logout() { sessionStorage.removeItem('isLoggedIn'); window.location.href = 'login.html'; }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedLang = localStorage.getItem('preferredLang') || 'en';
+        const selector = document.querySelector('.lang-selector');
+        if(selector) selector.value = savedLang;
+        applyTranslations(savedLang);
+        loadClients(); loadRooms(); loadReservations();
+    });
+
+    function loadClients() {
+        fetch('http://localhost:8081/api/clients').then(res => res.json()).then(clients => {
+            const select = document.getElementById('clientId');
+            select.innerHTML = '<option value="">-- Select Client --</option>';
+            clients.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.name} (${c.accountNumber})</option>`; });
+        });
+    }
+
+    function loadRooms() {
+        fetch('http://localhost:8081/api/rooms').then(res => res.json()).then(rooms => {
+            const select = document.getElementById('roomId');
+            select.innerHTML = '<option value="">-- Select Room --</option>';
+            rooms.forEach(r => { if(r.status === 'Available') select.innerHTML += `<option value="${r.id}">Room ${r.roomNumber} - ${r.type} (${r.price} FCFA)</option>`; });
+        });
+    }
+
+    function loadReservations() {
+        fetch('http://localhost:8081/api/reservations').then(res => res.json()).then(reservations => {
+            allReservationsData = reservations;
+            displayReservations(reservations);
+        });
+    }
+
+    function displayReservations(reservations) {
+        const tableBody = document.getElementById('reservationTableBody');
+        tableBody.innerHTML = '';
+        if(reservations.length === 0) { tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No bookings found.</td></tr>'; return; }
+
+        reservations.forEach(r => {
+            let actionButton = ""; let paymentStatus = ""; let roomDisplay = ""; let statusBadge = "";
+
+            if (r.status === 'Confirmed') statusBadge = `<span class="badge badge-confirmed">Confirmed</span>`;
+            else if (r.status === 'Checked-Out') statusBadge = `<span class="badge badge-checkedout">Checked-Out</span>`;
+            else statusBadge = r.status;
+
+            if (r.room && r.room.roomNumber) roomDisplay = r.room.roomNumber;
+            else roomDisplay = `<span class="text-deleted">Deleted Room</span>`;
+
+            if (r.status !== 'Checked-Out') {
+                actionButton = `<button onclick="checkout(${r.id})" style="background:#dc3545; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">Check-out</button>`;
+            } else {
+                let clientId = r.client ? r.client.id : 0;
+                actionButton = `<button onclick="printInvoice(${clientId}, '${r.client ? r.client.name : 'N/A'}', '${r.client ? r.client.email : 'N/A'}', '${r.room ? r.room.roomNumber : 'N/A'}', '${r.checkInDate}', '${r.checkOutDate}', ${r.room ? r.room.price : 0})" style="background:#007bff; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">Invoice</button>`;
+            }
+
+            if (r.isPaid) paymentStatus = `<span style="color: #28a745; font-weight: bold;">✅ Paid</span>`;
+            else paymentStatus = `<button onclick="payReservation(${r.id})" style="background:#ffc107; color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">Mark as Paid</button>`;
+
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${r.id}</td>
+                    <td>${r.client ? r.client.name : '<span class="text-deleted">Deleted Client</span>'}</td>
+                    <td>${roomDisplay}</td>
+                    <td>${r.checkInDate}</td>
+                    <td>${r.checkOutDate}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actionButton}</td>
+                    <td>${paymentStatus}</td>
+                </tr>
+            `;
+        });
+    }
+
+    function filterReservations() {
+        const searchTerm = document.getElementById('searchBooking').value.toLowerCase();
+        const filteredData = allReservationsData.filter(r => {
+            const clientName = (r.client && r.client.name) ? r.client.name.toLowerCase() : "";
+            const roomNumber = (r.room && r.room.roomNumber) ? r.room.roomNumber.toLowerCase() : "";
+            return clientName.includes(searchTerm) || roomNumber.includes(searchTerm);
+        });
+        displayReservations(filteredData);
+    }
+
+    function makeReservation() {
+        const data = {
+            clientId: document.getElementById('clientId').value,
+            roomId: document.getElementById('roomId').value,
+            checkInDate: document.getElementById('checkInDate').value,
+            checkOutDate: document.getElementById('checkOutDate').value
+        };
+        fetch('http://localhost:8081/api/reservations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+        .then(async response => {
+            if (response.ok) { alert("Reservation Successful!"); loadReservations(); document.getElementById('checkInDate').value = ''; document.getElementById('checkOutDate').value = ''; }
+            else { const error = await response.text(); alert("Error: " + error); }
+        });
+    }
+
+    function checkout(id) {
+        if(confirm("Check-out and free the room?")) {
+            fetch(`http://localhost:8081/api/reservations/checkout/${id}`, { method: 'PUT' }).then(res => { if(res.ok) loadReservations(); });
+        }
+    }
+
+    function payReservation(id) {
+        if(confirm("Confirm payment?")) {
+            fetch(`http://localhost:8081/api/reservations/pay/${id}`, { method: 'PUT' }).then(res => { if(res.ok) loadReservations(); });
+        }
+    }
+
+    function printInvoice(clientId, name, email, room, checkIn, checkOut, price) {
+        const url = `invoice.html?clientId=${clientId}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&room=${encodeURIComponent(room)}&checkIn=${checkIn}&checkOut=${checkOut}&price=${price}`;
+        window.open(url, '_blank');
+    }
+</script>
+</body>
+</html>

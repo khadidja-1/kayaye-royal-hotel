@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kayaye Royal Hotel - Inventory</title>
+    <script src="translations.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; margin: 0; }
+        .container { max-width: 1100px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #1a252f; padding: 15px 20px; border-radius: 8px; flex-wrap: wrap;}
+        .nav-links { display: flex; flex-wrap: wrap; gap: 15px; align-items: center;}
+        .nav-links a { text-decoration: none; color: white; font-weight: bold; font-size: 14px;}
+        .nav-links a.active { color: #d4af37; text-decoration: underline; }
+        .lang-selector { background: #d4af37; color: #1a252f; border: none; padding: 8px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-left: 15px;}
+        .nav-actions { display: flex; gap: 15px; align-items: center; }
+        .btn-website { text-decoration: none; color: #2ecc71; font-weight: bold; font-size: 14px; }
+        .btn-logout { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; }
+
+        h2 { color: #333; }
+        .form-inline { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .form-inline input, .form-inline select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .form-inline button { padding: 10px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #1a252f; color: #d4af37; }
+
+        .low-stock { color: #dc3545; font-weight: bold; }
+        .status-badge { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-ok { background-color: #e8f5e9; color: #2e7d32; }
+        .status-low { background-color: #ffebee; color: #c62828; }
+        .btn-edit { background-color: #ffc107; color: #333; padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .btn-danger { background-color: #dc3545; color: white; padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="nav">
+        <div class="nav-links">
+            <a href="dashboard.html" data-translate="nav_dash">Dashboard</a>
+            <a href="clients.html" data-translate="nav_clients">Clients</a>
+            <a href="rooms.html" data-translate="nav_rooms">Rooms</a>
+            <a href="reservations.html" data-translate="nav_bookings">Bookings</a>
+            <a href="employees.html" data-translate="nav_employees">Employees</a>
+            <a href="restaurant.html" data-translate="nav_rest">Restaurant</a>
+            <a href="housekeeping.html" data-translate="nav_house">Housekeeping</a>
+            <a href="inventory.html" class="active" data-translate="nav_inv">Inventory</a>
+            <a href="events.html" data-translate="nav_events">Events</a>
+        </div>
+        <div class="nav-actions">
+            <select class="lang-selector" onchange="applyTranslations(this.value)">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+            </select>
+            <a href="index.html" target="_blank" class="btn-website" data-translate="nav_website">🌐 View Website</a>
+            <button class="btn-logout" onclick="logout()" data-translate="btn_logout">Logout</button>
+        </div>
+    </div>
+
+    <h2 data-translate="inv_title">Inventory Management</h2>
+    <p data-translate="inv_desc">Track your hotel supplies and get alerts when stock is low.</p>
+
+    <div class="form-inline">
+        <input type="text" id="itemName" placeholder="Item Name" required>
+        <select id="itemCategory">
+            <option value="Housekeeping">Housekeeping</option>
+            <option value="Kitchen">Kitchen</option>
+            <option value="Bar">Bar</option>
+        </select>
+        <input type="number" id="itemQty" placeholder="Current Quantity" required min="0">
+        <input type="number" id="itemMin" placeholder="Min Stock Alert" required min="0">
+        <input type="text" id="itemUnit" placeholder="Unit (e.g. pcs, kg)" required>
+        <button onclick="addItem()" data-translate="inv_add">Add Item</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th data-translate="inv_item">Item Name</th>
+            <th data-translate="inv_cat">Category</th>
+            <th data-translate="inv_qty">Quantity</th>
+            <th data-translate="inv_min">Min Stock</th>
+            <th data-translate="inv_status">Status</th>
+            <th data-translate="th_actions">Actions</th>
+        </tr>
+        </thead>
+        <tbody id="inventoryTableBody"></tbody>
+    </table>
+</div>
+
+<div id="editModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:white; margin:15% auto; padding:20px; border-radius:8px; width:300px;">
+        <h3>Update Stock</h3>
+        <input type="hidden" id="editId">
+        <label style="display:block; margin-bottom:5px;">New Quantity:</label>
+        <input type="number" id="editQty" style="width:100%; padding:8px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px;">
+        <button onclick="saveStock()" style="width:100%; padding:10px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Save</button>
+        <button onclick="document.getElementById('editModal').style.display='none'" style="width:100%; padding:10px; background:#ccc; color:#333; border:none; border-radius:4px; cursor:pointer; margin-top:5px;">Cancel</button>
+    </div>
+</div>
+
+<script>
+    function logout() { sessionStorage.removeItem('isLoggedIn'); window.location.href = 'login.html'; }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedLang = localStorage.getItem('preferredLang') || 'en';
+        const selector = document.querySelector('.lang-selector');
+        if(selector) selector.value = savedLang;
+        applyTranslations(savedLang);
+        loadInventory();
+    });
+
+    let allItems = [];
+
+    function loadInventory() {
+        fetch('http://localhost:8081/api/inventory')
+            .then(res => res.json())
+            .then(items => {
+                allItems = items;
+                const tableBody = document.getElementById('inventoryTableBody');
+                tableBody.innerHTML = '';
+                items.forEach(item => {
+                    const isLow = item.quantity <= item.minStock;
+                    const statusBadge = isLow ? `<span class="status-badge status-low">LOW</span>` : `<span class="status-badge status-ok">OK</span>`;
+                    const qtyClass = isLow ? 'low-stock' : '';
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${item.id}</td>
+                            <td>${item.name}</td>
+                            <td>${item.category}</td>
+                            <td class="${qtyClass}">${item.quantity} ${item.unit}</td>
+                            <td>${item.minStock} ${item.unit}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button class="btn-edit" onclick="openEditModal(${item.id}, ${item.quantity})">Update</button>
+                                <button class="btn-danger" onclick="deleteItem(${item.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function addItem() {
+        const itemData = {
+            name: document.getElementById('itemName').value,
+            category: document.getElementById('itemCategory').value,
+            quantity: parseInt(document.getElementById('itemQty').value),
+            minStock: parseInt(document.getElementById('itemMin').value),
+            unit: document.getElementById('itemUnit').value
+        };
+        fetch('http://localhost:8081/api/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(itemData) })
+        .then(res => {
+            if(res.ok) {
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemQty').value = '';
+                document.getElementById('itemMin').value = '';
+                document.getElementById('itemUnit').value = '';
+                loadInventory();
+            }
+        });
+    }
+
+    function openEditModal(id, currentQty) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editQty').value = currentQty;
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function saveStock() {
+        const id = document.getElementById('editId').value;
+        const newQty = parseInt(document.getElementById('editQty').value);
+        const item = allItems.find(i => i.id == id);
+        if(!item) return;
+        item.quantity = newQty;
+        fetch(`http://localhost:8081/api/inventory/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) })
+        .then(res => {
+            if(res.ok) { document.getElementById('editModal').style.display = 'none'; loadInventory(); }
+        });
+    }
+
+    function deleteItem(id) {
+        if(confirm("Delete this item?")) {
+            fetch(`http://localhost:8081/api/inventory/${id}`, { method: 'DELETE' }).then(res => { if(res.ok) loadInventory(); });
+        }
+    }
+</script>
+</body>
+</html>

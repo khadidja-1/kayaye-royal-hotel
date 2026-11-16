@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kayaye Royal Hotel - Register Client</title>
+  <script src="translations.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f7f6; margin: 0; padding: 0; }
+    .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #1a252f; padding: 15px 20px; border-radius: 8px; flex-wrap: wrap;}
+    .nav-links { display: flex; flex-wrap: wrap; gap: 15px; align-items: center;}
+    .nav-links a { text-decoration: none; color: white; font-weight: bold; font-size: 14px;}
+    .nav-links a.active { color: #d4af37; text-decoration: underline; }
+    .lang-selector { background: #d4af37; color: #1a252f; border: none; padding: 8px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-left: 15px;}
+    .nav-actions { display: flex; gap: 15px; align-items: center; }
+    .btn-website { text-decoration: none; color: #2ecc71; font-weight: bold; font-size: 14px; }
+    .btn-logout { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; }
+
+    .container { background: white; padding: 30px 40px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin: 0 auto 50px auto; }
+    h2 { text-align: center; color: #333; margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; font-size: 14px; }
+    input[type="text"], input[type="email"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+    .camera-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
+    .btn-camera { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; }
+    .btn-open { background-color: #007bff; }
+    .btn-snap { background-color: #28a745; display: none; }
+    video { width: 100%; border-radius: 5px; border: 2px solid #ccc; display: none; }
+    img#photoPreview { width: 100%; border-radius: 5px; border: 2px solid #28a745; margin-top: 10px; display: none; }
+    button[type="submit"] { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+    #message { text-align: center; margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div style="padding: 20px 30px 0 30px;">
+  <div class="nav">
+    <div class="nav-links">
+      <a href="dashboard.html" data-translate="nav_dash">Dashboard</a>
+      <a href="register-client.html" class="active" data-translate="nav_register">Register Client</a>
+      <a href="clients.html" data-translate="nav_clients">Clients</a>
+      <a href="rooms.html" data-translate="nav_rooms">Rooms</a>
+      <a href="reservations.html" data-translate="nav_bookings">Bookings</a>
+      <a href="employees.html" data-translate="nav_employees">Employees</a>
+      <a href="restaurant.html" data-translate="nav_rest">Restaurant</a>
+      <a href="housekeeping.html" data-translate="nav_house">Housekeeping</a>
+      <a href="inventory.html" data-translate="nav_inv">Inventory</a>
+      <a href="events.html" data-translate="nav_events">Events</a>
+    </div>
+    <div class="nav-actions">
+      <select class="lang-selector" onchange="applyTranslations(this.value)">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="ar">العربية</option>
+      </select>
+      <a href="index.html" target="_blank" class="btn-website" data-translate="nav_website">🌐 View Website</a>
+      <button class="btn-logout" onclick="logout()" data-translate="btn_logout">Logout</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <h2 data-translate="reg_title">Client Registration</h2>
+  <form id="clientForm">
+    <div class="form-group">
+      <label data-translate="th_name">Full Name</label>
+      <input type="text" id="name" required>
+    </div>
+    <div class="form-group">
+      <label data-translate="th_contact">Contact</label>
+      <input type="text" id="contact" required>
+    </div>
+    <div class="form-group">
+      <label data-translate="th_email">Email</label>
+      <input type="email" id="email" required>
+    </div>
+    <div class="form-group">
+      <label data-translate="th_account">Account / ID</label>
+      <input type="text" id="accountNumber" required>
+    </div>
+
+    <div class="form-group" style="border-top: 1px solid #eee; padding-top: 15px;">
+      <label data-translate="reg_scan">Scan Passport / ID Photo</label>
+      <div class="camera-buttons">
+        <button type="button" class="btn-camera btn-open" id="openCamBtn" onclick="startCamera()">📷 Open Camera</button>
+        <button type="button" class="btn-camera btn-snap" id="snapBtn" onclick="takeSnapshot()">Take Photo</button>
+      </div>
+      <div style="text-align: center;">
+        <video id="video" autoplay></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <img id="photoPreview" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Authorization</label>
+      <input type="text" id="authorization" placeholder="Yes / No">
+    </div>
+    <button type="submit" data-translate="reg_btn">Register Client</button>
+  </form>
+  <p id="message"></p>
+</div>
+
+<script>
+  function logout() { sessionStorage.removeItem('isLoggedIn'); window.location.href = 'login.html'; }
+
+  document.addEventListener('DOMContentLoaded', () => {
+      const savedLang = localStorage.getItem('preferredLang') || 'en';
+      const selector = document.querySelector('.lang-selector');
+      if(selector) selector.value = savedLang;
+      applyTranslations(savedLang);
+  });
+
+  let video = document.getElementById('video');
+  let canvas = document.getElementById('canvas');
+  let photoPreview = document.getElementById('photoPreview');
+  let snapBtn = document.getElementById('snapBtn');
+  let openCamBtn = document.getElementById('openCamBtn');
+  let stream = null;
+  let imageFileBlob = null;
+
+  function startCamera() {
+      video.style.display = 'block'; photoPreview.style.display = 'none'; snapBtn.style.display = 'inline-block'; openCamBtn.style.display = 'none';
+      navigator.mediaDevices.getUserMedia({ video: true }).then(s => { stream = s; video.srcObject = stream; })
+      .catch(err => { alert("Camera error"); video.style.display = 'none'; openCamBtn.style.display = 'inline-block'; snapBtn.style.display = 'none'; });
+  }
+
+  function takeSnapshot() {
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      photoPreview.src = canvas.toDataURL('image/jpeg'); photoPreview.style.display = 'block';
+      canvas.toBlob(blob => { imageFileBlob = blob; }, 'image/jpeg', 0.9);
+      if (stream) { stream.getTracks().forEach(track => track.stop()); video.style.display = 'none'; snapBtn.style.display = 'none'; openCamBtn.style.display = 'inline-block'; openCamBtn.innerText = "🔄 Retake"; }
+  }
+
+  document.getElementById('clientForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const messageDiv = document.getElementById('message');
+      messageDiv.innerText = 'Saving...';
+      const formData = new FormData();
+      formData.append('name', document.getElementById('name').value);
+      formData.append('contact', document.getElementById('contact').value);
+      formData.append('email', document.getElementById('email').value);
+      formData.append('accountNumber', document.getElementById('accountNumber').value);
+      formData.append('authorization', document.getElementById('authorization').value);
+      if (imageFileBlob) formData.append('passportPhotoFile', imageFileBlob, 'passport.jpg');
+
+      try {
+          const response = await fetch('http://localhost:8081/api/clients', { method: 'POST', body: formData });
+          if (response.ok) {
+              messageDiv.style.color = 'green'; messageDiv.innerText = 'Client registered!';
+              document.getElementById('clientForm').reset(); photoPreview.style.display = 'none'; imageFileBlob = null; openCamBtn.innerText = "📷 Open Camera";
+          } else {
+              messageDiv.style.color = 'red'; messageDiv.innerText = 'Error registering client.';
+          }
+      } catch (error) { messageDiv.style.color = 'red'; messageDiv.innerText = 'Server error.'; }
+  });
+</script>
+</body>
+</html>
